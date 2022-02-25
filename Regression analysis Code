@@ -1,0 +1,272 @@
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+import pandas as pd
+import seaborn as sns
+
+X = np.array([
+24,
+50,
+15,
+38,
+87,
+36,
+12,
+81,
+25,
+5,
+16,
+16,
+24,
+39,
+54,
+60,
+26,
+73,
+29,
+31,
+68,
+87,
+58,
+54,
+84,
+58,
+49,
+20,
+90,
+48,
+4,
+25,
+42,
+0,
+60,
+93,
+39,
+7,
+21,
+68,
+84,
+0,
+58,
+19,
+36,
+19,
+59,
+51,
+19,
+33,
+85,
+44,
+5,
+59,
+14,
+9,
+75,
+69,
+10,
+17,
+58,
+74,
+21,
+51,
+19,
+50,
+24,
+0,
+12,
+75,
+21,
+64,
+5,
+58,
+32,
+41,
+7,
+4,
+5,
+49,
+90,
+3,
+11,
+32,
+83,
+25,
+83,
+26,
+76,
+95,
+53,
+77,
+42,
+25,
+54,
+55,
+0,
+73,
+35,
+])
+y = np.array([
+21.54945196,
+47.46446305,
+17.21865634,
+36.58639803,
+87.28898389,
+32.46387493,
+10.78089683,
+80.7633986,
+24.61215147,
+6.963319071,
+11.23757338,
+13.53290206,
+24.60323899,
+39.40049976,
+48.43753838,
+61.69900319,
+26.92832418,
+70.4052055,
+29.34092408,
+25.30895192,
+69.02934339,
+84.99484703,
+57.04310305,
+50.5921991,
+83.02772202,
+57.05752706,
+47.95883341,
+24.34226432,
+94.68488281,
+48.03970696,
+7.08132338,
+21.99239907,
+42.33151664,
+0.329089443,
+61.92303698,
+91.17716423,
+39.45358014,
+5.996069607,
+22.59015942,
+61.18044414,
+85.02778957,
+-1.28631089,
+61.94273962,
+21.96033347,
+33.66194193,
+17.60946242,
+58.5630564,
+52.82390762,
+22.1363481,
+35.07467353,
+86.18822311,
+42.63227697,
+4.09817744,
+61.2229864,
+17.70677576,
+11.85312574,
+80.23051695,
+62.64931741,
+9.616859804,
+20.02797699,
+61.7510743,
+71.61010303,
+23.77154623,
+51.90142035,
+22.66073682,
+50.02897927,
+26.68794368,
+0.376911899,
+6.806419002,
+77.33986001,
+28.90260209,
+66.7346608,
+0.707510638,
+57.07748383,
+28.41453196,
+44.46272123,
+7.459605998,
+2.316708112,
+4.928546187,
+52.50336074,
+91.19109623,
+8.489164326,
+6.963371967,
+31.97989959,
+81.4281205,
+22.62365422,
+78.52505087,
+25.80714057,
+73.51081775,
+91.775467,
+49.21863516,
+80.50445387,
+50.05636123,
+25.46292549,
+55.32164264,
+59.1244888,
+1.100686692,
+71.98020786,
+30.13666408,
+])
+beta1hat, beta0hat, r_value, p_value, std_err = stats.linregress(X, y)
+print('beta0hat = {0:.2f}, beta1hat = {1:.2f}'.format(beta0hat, beta1hat))
+print('r_value = {0:.3f}, r_squared = {1:.3f}'.format(r_value, r_value**2))
+
+plt.plot(X, y, 'o', label='original data')
+plt.plot(X, beta0hat + beta1hat*X, 'r', label='fitted line')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.show()
+
+#Using pandas & ols
+data = np.column_stack((X, y))
+df = pd.DataFrame(data, columns=['x', 'y'])
+df.describe()
+sns.jointplot(x='x',y='y',data=df)
+sns.pairplot(df)
+#Create a linear model plot Selling price vs Asking price
+#sns.lmplot(x='x',y='y',data=df)
+plt.figure()
+sns.regplot(x='x',y='y', data=df, fit_reg=True)
+
+# Fit the model
+formula = 'y ~ X'
+model = ols(formula, df).fit()
+# Print the summary
+print(model.summary())
+
+#Peform analysis of variance on fitted linear model
+table = anova_lm(model)
+print('\nANOVA table')
+print(table)
+
+#Hypothesis test
+f0 = 1085.98
+n = len(X)
+alpha = 0.05
+#ppf (Percent point function)
+f_alpha = stats.f.ppf(1-alpha, 1, n-2)
+print('alpha = {0:.2f}, f_alpha = {1:.2f}'.format(alpha, f_alpha))
+
+# Retrieve the parameter estimates
+beta0, beta1 = model._results.params
+plt.figure()
+plt.plot(X, y, 'o')
+yhat = beta0 + X*beta1
+plt.plot(X, yhat)
+plt.xlabel('X')
+plt.ylabel('y')
+plt.show()
+
+#Residual plot
+plt.figure()
+plt.scatter(yhat, y - yhat, c='g', s = 40)
+plt.hlines(y=0, xmin=0, xmax=100, colors ="r", linewidth=2)
+plt.gca().set_xlim(left=0, right=100)
+plt.ylim(-10, 10)
+plt.title('Residual plot')
+plt.xlabel('$\hat{y}$', fontsize=14)
+plt.ylabel('Residuals', fontsize=14)
